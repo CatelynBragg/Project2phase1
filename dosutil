@@ -2,7 +2,7 @@
 
 #==============================================================================
 #
-# Name     : Catelyn Bragg
+# Name     : N/A
 #
 # Purpose  : performs basic UNIX file management functions for DOS/Windows
 #            users not familiar with UNIX.
@@ -26,8 +26,8 @@
 #==============================================================================
 
 # Author name
-AUTHOR_FNAME="Catelyn"
-AUTHOR_LNAME="Bragg"
+AUTHOR_FNAME="FIRST"
+AUTHOR_LNAME="LAST"
 
 #==== Functions ===============================================================
 
