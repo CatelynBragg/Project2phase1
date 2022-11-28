@@ -1,0 +1,222 @@
+#!/bin/bash
+
+#==============================================================================
+#
+# Name     : Catelyn Bragg
+#
+# Purpose  : performs basic UNIX file management functions for DOS/Windows
+#            users not familiar with UNIX.
+#            Takes DOS/Windows command as the first parameter and performs
+#            the equivalent UNIX command.
+#
+# Revision : 10 November 2022
+#
+# Variables:
+#   AUTHOR_FNAME - Script author's first name
+#   AUTHOR_LNAME - Script author's lasst name
+#   COMMAND      - Stores the Windows/DOS command
+#   SOURCE       - Source file
+#   DEST         - Destination file
+#   ARGCOUNT     - Total number of arguments to the script
+#
+# Usage    : ./dosutil dos_command sourcefile [destination_file]
+#            ./dosutil help
+#            ./dosutil author
+#
+#==============================================================================
+
+# Author name
+AUTHOR_FNAME="Catelyn"
+AUTHOR_LNAME="Bragg"
+
+#==== Functions ===============================================================
+
+# Displays script usage info and the supported commands
+usage()
+{
+  echo ""
+  echo "Usage:"
+  echo ""
+  echo "author – Prints script author's last name, first name"
+  echo "$0 author"
+  echo ""
+  echo "type   – Prints the content of the file in the first parameter"
+  echo "$0 type filename"
+  echo ""
+  echo "copy   – Copies a file from source to destination"
+  echo "$0 copy sourcefile destfile"
+  echo ""
+  echo "ren    – Renames a file or directory"
+  echo "$0 ren sourcefile destfile"
+  echo "$0 ren sourcedir destdir"
+  echo ""
+  echo "move   – Moves a file or directory"
+  echo "$0 move sourcefile destfile"
+  echo "$0 move sourcedir destdir"
+  echo ""
+  echo "del    – Deletes a file (without asking for confirmation)"
+  echo "$0 del filename"
+  echo ""
+  echo "help   – Prints a list of supported commands, their action, and"
+  echo "         required parameters"
+  echo "$0 help"
+  echo ""
+
+  exit 1
+}
+
+#------------------------------------------------------------------------------
+
+# Verifies the existence of source file
+verify_source_file()
+{
+  if [ ! -f "$SOURCE" ] && [ ! -d "$SOURCE" ]
+  then
+      # Source file or directory does not exist
+      echo "File or directory \"$SOURCE\" does not exist"
+      exit 1
+  elif [ "$SOURCE" = "$DEST" ]
+  then
+      echo "Error: Soruce and destination cannot be the same"
+      exit 1
+  fi
+}
+
+#------------------------------------------------------------------------------
+
+# Checks the existence of destination file
+check_dest_exists()
+{
+  # Checking if the destination file exists and is not a directory
+  if [ -f "$DEST" ] && [ ! -d "$DEST" ]
+  then
+      echo "Error: File \"$DEST\" already exists"
+      exit 1
+  # Only the destination directory is provided without file name
+  elif [ -d "$DEST" ] && [ -f "${DEST}/${SOURCE}" ]
+  then
+      echo "Error: File \"$SOURCE\" already exists in \"$DEST\""
+      exit 1
+  elif [ "$SOURCE" = "$DEST" ]
+  then
+      echo "Error: Soruce and destination cannot be the same"
+      exit 1
+  fi
+}
+
+#------------------------------------------------------------------------------
+
+# Executes DOS/Windows commands
+execute_command()
+{
+  # Do equivalent Unix action for the command
+  case "$COMMAND" in
+    # Output author name in the form last, first
+    author)
+      echo "${AUTHOR_LNAME}, ${AUTHOR_FNAME}"
+      ;;
+
+    # Output the content of the file in the first parameter
+    type)
+      # Check argument count, it should be 2
+      if [ "$ARGCOUNT" -lt 2 ]
+      then
+          echo "Error: Filename not specified"
+          echo "Usage: ./dosutil type filename"
+          exit 1
+      fi
+
+      # Verify the existance of file
+      verify_source_file
+
+      # Display the file
+      cat "$SOURCE"
+      ;;
+
+    # Copies source file to destination
+    copy)
+      # Check argument count, it should be 3
+      if [ "$ARGCOUNT" -ne 3 ]
+      then
+          echo "Error: More than or less than two arguments to the command"
+          echo "Usage: ./dosutil copy sourcefile destfile"
+          exit 1
+      fi
+
+      # Verify the existance of source file
+      verify_source_file
+
+      # Check if destination already exists
+      check_dest_exists
+
+      # Copy the source file to destination
+      # >/dev/null 2>&1 is for supressing error messages, if any
+      cp "$SOURCE" "$DEST" >/dev/null 2>&1
+      ;;
+
+    # Renames source file or directory to new name
+    # Note: The unix command mv handles both the cases - ren and move in DOS
+    ren|move)
+      # Check argument count, it should be 3
+      if [ "$ARGCOUNT" -ne 3 ]
+      then
+          echo "Error: More than or less than two arguments to the command"
+          echo "Usage: ./dosutil ren sourcefile destfile"
+          exit 1
+      fi
+
+      # Verify the existance of source file
+      verify_source_file
+
+      # Check if destination already exists
+      check_dest_exists
+
+      # Rename the source file to new name
+      mv "$SOURCE" "$DEST" >/dev/null 2>&1
+      ;;
+    del)
+      # Check argument count, it should be 2
+      if [ "$ARGCOUNT" -ne 2 ]
+      then
+          echo "Error: Filename not specified"
+          echo "Usage: ./dosutil del filename"
+          exit 1
+      fi
+
+      # Check if the argument provided is directory
+      if [ -d "$SOURCE" ]
+      then
+          echo "Error: $SOURCE is directory, please specify a file"
+          exit 1
+      fi
+
+      # Verify the existance of source file
+      verify_source_file
+
+      # Rename the source file to new name
+      rm -f "$SOURCE" >/dev/null 2>&1
+      ;;
+    help)
+      usage
+      ;;
+
+    *)
+      usage
+      ;;
+  esac
+}
+
+#==============================================================================
+
+# The first parameter is Windows/DOS command
+COMMAND="$1"
+
+# Total number of arguments and the argument values
+ARGCOUNT="$#"
+SOURCE="$2"
+DEST="$3"
+
+# Execute the command
+execute_command "$COMMAND"
+
+exit 0
